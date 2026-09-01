@@ -1,0 +1,27 @@
+{
+  "name": "edgeshield",
+  "version": "0.1.0",
+  "description": "Reverse proxy shield for small services. Token-bucket rate limit per IP, concurrency cap, slowloris timeout, request size caps, rule engine with auto-ban. Local-first, zero dependencies.",
+  "type": "module",
+  "bin": {
+    "edgeshield": "src/cli.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "ddos",
+    "shield",
+    "rate-limit",
+    "proxy",
+    "security",
+    "reverse-proxy"
+  ],
+  "license": "MIT",
+  "files": [
+    "src"
+  ]
+}

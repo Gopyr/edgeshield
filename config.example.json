@@ -1,0 +1,29 @@
+{
+  "target": { "host": "127.0.0.1", "port": 3000 },
+  "listen": { "host": "0.0.0.0", "port": 8080 },
+  "rate": { "perIp": { "capacity": 60, "refillPerSec": 10 } },
+  "window": { "maxPerWindow": 2000, "windowMs": 60000 },
+  "concurrency": { "max": 100 },
+  "slowloris": { "headerTimeoutMs": 8000, "requestTimeoutMs": 15000 },
+  "maxBodyBytes": 1048576,
+  "maxPathLen": 512,
+  "trustProxy": false,
+  "ban": { "tiersMs": [60000, 300000, 900000], "forgetMs": 600000 },
+  "rules": [
+    {
+      "action": "block",
+      "match": { "path": ["/admin", "/config", "/.env"] },
+      "reason": "sensitive path blocked"
+    },
+    {
+      "action": "block",
+      "match": { "userAgent": ["curl/7.68", "python-requests"] },
+      "reason": "unusual client blocked"
+    },
+    {
+      "action": "allow",
+      "match": { "ip": ["127.0.0.1"] },
+      "reason": "localhost always allowed"
+    }
+  ]
+}

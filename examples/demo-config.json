@@ -1,0 +1,17 @@
+{
+  "target": { "host": "127.0.0.1", "port": 3199 },
+  "listen": { "host": "127.0.0.1", "port": 3188 },
+  "rate": { "perIp": { "capacity": 8, "refillPerSec": 3 } },
+  "concurrency": { "max": 4 },
+  "window": { "maxPerWindow": 100, "windowMs": 10000 },
+  "slowloris": { "headerTimeoutMs": 4000, "requestTimeoutMs": 8000 },
+  "maxBodyBytes": 4096,
+  "maxPathLen": 128,
+  "trustProxy": false,
+  "ban": { "tiersMs": [60000, 300000, 900000], "forgetMs": 600000 },
+  "rules": [
+    { "action": "block", "match": { "path": ["/admin", "/.env", "/config"] }, "reason": "sensitive path blocked" },
+    { "action": "block", "match": { "userAgent": ["curl/7.68"] }, "reason": "blocked client" },
+    { "action": "allow", "match": { "ip": ["127.0.0.1"] }, "reason": "localhost allowed" }
+  ]
+}
