@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%">
+  <rect width="100%" height="100%" rx="10" fill="#0d1117" stroke="#30363d" stroke-width="2"/>
+  <rect x="20" y="20" width="960" height="560" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <g font-family="ui-sans,system-ui,sans-serif">
+    <text x="40" y="55" font-size="28" font-weight="800" fill="#58a6ff">edgeshield</text>
+    <rect x="190" y="38" width="80" height="24" rx="12" fill="rgba(63,185,80,0.15)"/>
+    <circle cx="205" cy="50" r="4" fill="#56d364"/>
+    <text x="215" y="54" font-size="12" font-weight="600" fill="#56d364">LIVE</text>
+    <text x="880" y="54" font-size="12" fill="#8b949e" text-anchor="end">Last sync: 13:00:00</text>
+  </g>
+
+  <!-- Grid Cards -->
+  <g>
+    <!-- Card 1: Allowed -->
+    <rect x="40" y="90" width="220" height="120" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="55" y="110" font-size="11" fill="#8b949e">TRAFFIC ALLOWED</text>
+    <text x="55" y="145" font-size="32" font-weight="700" fill="#56d364">12,345</text>
+    <text x="55" y="168" font-size="12" fill="#8b949e">230.25 /sec</text>
+
+    <!-- Card 2: Blocked -->
+    <rect x="270" y="90" width="220" height="120" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="285" y="110" font-size="11" fill="#8b949e">TRAFFIC BLOCKED</text>
+    <text x="285" y="145" font-size="32" font-weight="700" fill="#ff7b72">123</text>
+    <text x="285" y="168" font-size="12" fill="#8b949e">5.0 /sec</text>
+
+    <!-- Card 3: Active Bans -->
+    <rect x="500" y="90" width="220" height="120" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="515" y="110" font-size="11" fill="#8b949e">ACTIVE BANS</text>
+    <text x="515" y="145" font-size="32" font-weight="700" fill="#e3b341">3</text>
+    <text x="515" y="168" font-size="12" fill="#8b949e">escalating strikes</text>
+
+    <!-- Card 4: Concurrency -->
+    <rect x="730" y="90" width="220" height="120" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+    <text x="745" y="110" font-size="11" fill="#8b949e">CONCURRENCY GAUGE</text>
+    <text x="745" y="145" font-size="32" font-weight="700" fill="#f0f6fc">45 / 100</text>
+    <text x="745" y="168" font-size="12" fill="#8b949e">high water 80</text>
+  </g>
+
+  <!-- Decision Log Table -->
+  <rect x="40" y="240" width="920" height="320" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="60" y="265" font-size="16" font-weight="700" fill="#f0f6fc">Decision Pipeline Log</text>
+  <text x="820" y="265" font-size="11" fill="#8b949e" text-anchor="end">Polling status: Active (2s)</text>
+
+  <g font-family="monospace" font-size="12" fill="#c9d1d9">
+    <text x="60" y="300" fill="#8b949e" font-weight="600">Time</text>
+    <text x="160" y="300" fill="#8b949e" font-weight="600">Client IP</text>
+    <text x="320" y="300" fill="#8b949e" font-weight="600">Resource Path</text>
+    <text x="580" y="300" fill="#8b949e" font-weight="600">Action</text>
+    <text x="720" y="300" fill="#8b949e" font-weight="600">Reason</text>
+
+    <!-- Sample Rows -->
+    <line x1="40" y1="315" x2="960" y2="315" stroke="#30363d" stroke-width="1"/>
+    <text x="60" y="340">13:00:01</text><text x="160" y="340">192.168.1.100</text><text x="320" y="340">/api/v1/data</text>
+    <rect x="570" y="328" width="80" height="18" rx="4" fill="rgba(63,185,80,0.15)"/>
+    <text x="580" y="340" font-size="11" font-weight="700" fill="#56d364">ALLOWED</text><text x="720" y="340" fill="#8b949e">Passed all checks</text>
+
+    <line x1="40" y1="355" x2="960" y2="355" stroke="#21262d" stroke-width="1"/>
+    <text x="60" y="380">13:00:02</text><text x="160" y="380">10.0.0.5</text><text x="320" y="380">/admin/login</text>
+    <rect x="570" y="368" width="70" height="18" rx="4" fill="rgba(248,81,73,0.15)"/>
+    <text x="580" y="380" font-size="11" font-weight="700" fill="#ff7b72">BLOCKED</text><text x="720" y="380" fill="#8b949e">Sensitive path</text>
+
+    <line x1="40" y1="395" x2="960" y2="395" stroke="#21262d" stroke-width="1"/>
+    <text x="60" y="420">13:00:03</text><text x="160" y="420">1.2.3.4</text><text x="320" y="420">/api/flood</text>
+    <rect x="570" y="408" width="70" height="18" rx="4" fill="rgba(248,81,73,0.15)"/>
+    <text x="580" y="420" font-size="11" font-weight="700" fill="#ff7b72">BLOCKED</text><text x="720" y="420" fill="#8b949e">Rate limited</text>
+
+    <line x1="40" y1="435" x2="960" y2="435" stroke="#21262d" stroke-width="1"/>
+    <text x="60" y="460">13:00:04</text><text x="160" y="460">1.2.3.4</text><text x="320" y="460">/api/flood</text>
+    <rect x="570" y="448" width="70" height="18" rx="4" fill="rgba(210,153,34,0.15)"/>
+    <text x="580" y="460" font-size="11" font-weight="700" fill="#e3b341">BANNED</text><text x="720" y="460" fill="#8b949e">Rate limit escalation (strike 1)</text>
+
+  </g>
+
+  <!-- Footer -->
+  <g font-family="ui-sans,system-ui,sans-serif">
+    <text x="500" y="580" font-size="12" fill="#8b949e" text-anchor="middle">edgeshield By Gopyr. Real-Time Autonomous Attack Mitigation Engine.</text>
+  </g>
+</svg>

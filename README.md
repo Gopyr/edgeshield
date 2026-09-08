@@ -1,103 +1,72 @@
 # edgeshield
 
-Local-first reverse proxy shield for small services. Sits in front of your app and filters traffic before it reaches the origin: per-IP rate limiting with auto-ban escalation, concurrency cap, slowloris timeout, request size caps, and a small rule engine. Zero dependencies, Node 18+.
+**edgeshield** adalah reverse proxy shield lokal yang dirancang untuk melindungi layanan berskala kecil dari serangan Layer 7 dan overload. Shield ini duduk di depan aplikasi Anda, memfilter lalu lintas sebelum mencapai origin, dengan fitur-fitur inti seperti rate limiting per-IP, escalasi auto-ban, pembatasan konkurensi, slowloris timeout, serta engine aturan sederhana. Zero dependensi, berjalan di Node 18+.
 
-This is the defensive half of a portfolio: [GP-1](https://github.com/Gopyr/GP-1) measures how a service behaves under load; edgeshield keeps a service alive when the load is hostile.
+Shield ini adalah setengah dari portofolio pertahanan: GP-1 mengukur perilaku layanan di bawah beban, sementara edgeshield menjaga layanan tetap hidup saat beban bersifat hostile.
 
-## What it stops
+## Melindungi dari
 
-| Attack shape | Defense | Status code |
+| Jenis Serangan | Pertahanan | Status Code |
 |---|---|---|
-| Botnet flood from many IPs | Per-IP token bucket (burst + refill) | 429 |
-| Repeated abuse from one IP | Auto-ban with escalation tiers (1m → 5m → 15m) | 429 |
-| Connection flood / slowloris | `headersTimeout` + `requestTimeout` on the proxy socket | 408/close |
-| Path/product abuse (scraping, admin probing) | Rule engine: block by path, method, user-agent, IP, CIDR | 403 |
-| Oversized bodies / pathological URLs | `maxBodyBytes`, `maxPathLen` | 413 / 414 |
-| Parallel overload on origin | Concurrency gauge (in-flight cap) | 503 |
-| Direct-to-origin probing | Shield is the only entry; origin binds loopback | n/a |
+| Botnet flood dari banyak IP | Token bucket per-IP (burst + refill) | 429 |
+| Penyalahgunaan berulang dari satu IP | Auto-ban dengan tier eskalasi (1m → 5m → 15m) | 429 |
+| Connection flood / Slowloris | `headersTimeout` + `requestTimeout` pada socket proxy | 408/close |
+| Path/product abuse (scraping, admin probing) | Engine aturan: blokir berdasarkan path, method, user-agent, IP, CIDR | 403 |
+| Oversized bodies / URL patologis | `maxBodyBytes`, `maxPathLen` | 413 / 414 |
+| Beban paralel berlebihan pada origin | Concurrency gauge (batas in-flight) | 503 |
+| Probing langsung ke origin | Shield adalah satu-satunya entri; origin bind loopback | n/a |
 
-## Install
+## Instalasi
 
 ```bash
 npm install -g .
-# or run without global install
+# atau jalankan tanpa instalasi global
 node src/cli.mjs --config config.example.json
 ```
 
-## Usage
+## Penggunaan
 
 ```bash
 edgeshield --config config.json
-edgeshield --target 127.0.0.1:3000 --port 8080    # bare defaults
-edgeshield --block-ip 1.2.3.4 --config config.json # temporary manual block
+edgeshield --target 127.0.0.1:3000 --port 8080    # default minimal
+edgeshield --block-ip 1.2.3.4 --config config.json # blokir manual sementara
 ```
 
-Start a target on `127.0.0.1:3000`, point the shield at it, and route traffic through the shield port instead. The origin stays on loopback so direct probing fails at the network layer.
+Jalankan layanan target di `127.0.0.1:3000`, arahkan shield ke sana, dan rutekan lalu lintas melalui port shield. Origin tetap terikat pada loopback sehingga probing langsung gagal di lapisan jaringan.
 
-## Dashboard
+## Dashboard Live
 
-While running, open `http://localhost:8080/__shield` for a live dark-theme dashboard (polls every 2s, no external assets): allowed/blocked counters, active bans, concurrency high-water, forwarded bytes, and a recent decisions table showing exactly why each request was blocked. No telemetry leaves the machine.
+Saat berjalan, buka `http://localhost:8080/__shield` untuk dashboard live bertema gelap yang modern (meminta data setiap 2 detik, tanpa aset eksternal): menampilkan konter lalu lintas diizinkan/diblokir, ban aktif, puncak konkurensi, byte yang diteruskan, dan tabel keputusan terbaru yang menunjukkan alasan pasti setiap permintaan diblokir.
 
-![edgeshield dashboard](screenshots/dashboard.png)
+![edgeshield Dashboard Live](screenshots/dashboard-live.png)
 
-Example from a real attack simulation (burst of requests from one client):
+## Konfigurasi
 
-```text
-normal request passes      ✔
-sensitive path blocked      ✔ (403)
-concurrency cap rejects     ✔ (503)
-6th request rate-limited    ✔ (429)
-auto-ban activated          ✔ (bans.active=1)
-```
+Lihat [`config.example.json`](config.example.json) untuk contoh konfigurasi detail. Aturan mendukung `ip`, `cidr`, `path` (exact atau sufiks `*`), `method`, `userAgent` (regex), dan `query` (key atau key=value). Aturan yang cocok pertama akan dieksekusi.
 
-## Config
+## Cara Kerja
 
-See [`config.example.json`](config.example.json):
+1. `Shield.evaluate()` berjalan berurutan: cek ban → aturan → panjang path → ukuran body → token bucket per-IP → window global → concurrency gauge.
+2. Pelanggaran rate-limit memicu `BanManager.strike(ip)`: pelanggaran berturut-turut dalam `forgetMs` meningkatkan durasi ban melalui tingkatan.
+3. Permintaan yang diizinkan diproksi ke target dengan `http.request`; error upstream mengembalikan 502.
+4. `/__shield` dan `/__shield/stats` dilayani oleh shield itu sendiri dan tidak pernah diproksi.
 
-```jsonc
-{
-  "target": { "host": "127.0.0.1", "port": 3000 },
-  "listen": { "host": "0.0.0.0", "port": 8080 },
-  "rate": { "perIp": { "capacity": 60, "refillPerSec": 10 } },
-  "window": { "maxPerWindow": 2000, "windowMs": 60000 },
-  "concurrency": { "max": 100 },
-  "slowloris": { "headerTimeoutMs": 8000, "requestTimeoutMs": 15000 },
-  "maxBodyBytes": 1048576,
-  "maxPathLen": 512,
-  "trustProxy": false,
-  "ban": { "tiersMs": [60000, 300000, 900000], "forgetMs": 600000 },
-  "rules": [
-    { "action": "block", "match": { "path": ["/admin", "/config", "/.env"] }, "reason": "sensitive path blocked" },
-    { "action": "allow", "match": { "ip": ["127.0.0.1"] }, "reason": "localhost always allowed" }
-  ]
-}
-```
+## Batasan
 
-Rules support `ip`, `cidr`, `path` (exact or `*` suffix), `method`, `userAgent` (regex), and `query` (key or key=value). First matching rule wins.
+- Proses tunggal, origin tunggal. Bukan edge yang di-load-balance (gunakan nginx/cloudflare di depan jika Anda memerlukannya).
+- State hanya dalam memori: ban dan bucket direset saat restart.
+- Tanpa terminasi TLS, HTTP/2, atau proxying WebSocket.
+- `trustProxy` mempercayai header `X-Forwarded-For` secara membabi buta; hanya aktifkan di belakang proxy terpercaya.
+- State token bucket per-IP dibatasi hingga 10k entri; setelah itu bucket terlama akan dihapus.
+- Ini adalah shield untuk layanan kecil, bukan WAF (Web Application Firewall). Ia melakukan throttling dan blocking berdasarkan bentuk, bukan konten payload.
 
-## How it works
-
-1. `Shield.evaluate()` runs in order: ban check → rules → path length → body size → per-IP token bucket → global window → concurrency gauge.
-2. A rate-limit violation triggers `BanManager.strike(ip)`: consecutive violations within `forgetMs` escalate the ban duration through tiers.
-3. Allowed requests proxy to the target with `http.request`; upstream errors return 502.
-4. `/__shield` and `/__shield/stats` are served by the shield itself and never proxied.
-
-## Limitations
-
-- Single process, single origin. Not a load-balanced edge (use nginx/cloudflare in front if you need that).
-- In-memory state only: bans and buckets reset on restart.
-- No TLS termination, no HTTP/2, no WebSocket proxying.
-- `trustProxy` trusts the `X-Forwarded-For` header blindly; only enable behind a trusted proxy.
-- Token bucket per-IP state is capped at 10k entries; beyond that the oldest buckets are dropped.
-- This is a shield for small services, not a WAF. It throttles and blocks based on shape, not on payload content.
-
-## Development
+## Pengembangan
 
 ```bash
 npm test        # unit: limiters, rules
-node test/integration.mjs   # end-to-end: run shield, attack it, verify
+node test/integration.mjs   # end-to-end: jalankan shield, serang, verifikasi
 ```
 
-## License
+## Lisensi
 
-MIT
+[MIT License](LICENSE)
