@@ -39,7 +39,7 @@ Jalankan layanan target di `127.0.0.1:3000`, arahkan shield ke sana, dan rutekan
 
 Saat berjalan, buka `http://localhost:8080/__shield` untuk dashboard live bertema gelap yang modern (meminta data setiap 2 detik, tanpa aset eksternal): menampilkan konter lalu lintas diizinkan/diblokir, ban aktif, puncak konkurensi, byte yang diteruskan, dan tabel keputusan terbaru yang menunjukkan alasan pasti setiap permintaan diblokir.
 
-![edgeshield Dashboard Live](screenshots/dashboard-live.png)
+![edgeshield Dashboard Live](screenshots/dashboard-live.svg)
 
 ## Konfigurasi
 
