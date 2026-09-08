@@ -27,6 +27,7 @@ node src/cli.mjs --config config.example.json
 ## Penggunaan
 
 ```bash
+edgeshield # Jalankan dengan default: target 127.0.0.1:3000, listen 0.0.0.0:8080
 edgeshield --config config.json
 edgeshield --target 127.0.0.1:3000 --port 8080    # default minimal
 edgeshield --block-ip 1.2.3.4 --config config.json # blokir manual sementara
@@ -51,14 +52,14 @@ Lihat [`config.example.json`](config.example.json) untuk contoh konfigurasi deta
 3. Permintaan yang diizinkan diproksi ke target dengan `http.request`; error upstream mengembalikan 502.
 4. `/__shield` dan `/__shield/stats` dilayani oleh shield itu sendiri dan tidak pernah diproksi.
 
-## Batasan
+## Filosofi Desain (Mengapa Memiliki Batasan Ini)
 
-- Proses tunggal, origin tunggal. Bukan edge yang di-load-balance (gunakan nginx/cloudflare di depan jika Anda memerlukannya).
-- State hanya dalam memori: ban dan bucket direset saat restart.
-- Tanpa terminasi TLS, HTTP/2, atau proxying WebSocket.
-- `trustProxy` mempercayai header `X-Forwarded-For` secara membabi buta; hanya aktifkan di belakang proxy terpercaya.
-- State token bucket per-IP dibatasi hingga 10k entri; setelah itu bucket terlama akan dihapus.
-- Ini adalah shield untuk layanan kecil, bukan WAF (Web Application Firewall). Ia melakukan throttling dan blocking berdasarkan bentuk, bukan konten payload.
+edgeshield dirancang untuk kesederhanaan dan kinerja tinggi pada layanan tunggal. Batasan-batasan ini adalah pilihan desain yang disengaja untuk menjaga overhead minimal dan fokus pada kasus penggunaan spesifik:
+
+-   **Skala Lokal & Efisien**: Didesain sebagai proses tunggal dengan state hanya di memori. Ini memastikan latensi rendah dan footprint sumber daya yang kecil, ideal untuk deployment di VPS atau di samping aplikasi backend kecil.
+-   **Tanpa Abstraksi Berlebihan**: Tidak ada terminasi TLS, HTTP/2, atau proxying WebSocket. Ini menjaga codebase tetap ramping, aman, dan mudah diaudit, menghindari kompleksitas yang tidak diperlukan untuk kasus penggunaan targetnya.
+-   **Kejelasan Konfigurasi**: `trustProxy` mempercayai header `X-Forwarded-For` secara langsung, memberikan kontrol eksplisit kepada pengguna mengenai asumsi keamanan di lingkungan proxy.
+-   **Proteksi Fokus**: Ia melakukan throttling dan blocking berdasarkan _bentuk_ lalu lintas (rate, ukuran, pola path), bukan inspeksi konten payload mendalam (ini adalah fungsi WAF, bukan shield ringan).
 
 ## Pengembangan
 
